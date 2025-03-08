@@ -1,150 +1,129 @@
 <?php
+session_start();
+
+// Definição de usuário e senha corretos
+$usuario_correto = "admin";
+$senha_correta = "welson123";
+
 if (!isset($_SESSION['logged_in'])) {
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $senha = $_POST['senha'];
-        $senha_correta = "welson123"; 
-        if ($senha == $senha_correta) {
+        $usuario = trim($_POST['usuario']);
+        $senha = trim($_POST['senha']);
+
+        if ($usuario === $usuario_correto && $senha === $senha_correta) {
             $_SESSION['logged_in'] = true;
+            header("Location: index.php"); // Redireciona após o login bem-sucedido
+            exit();
         } else {
-            $erro = "Senha incorreta!";
+            $erro = "Usuário ou senha incorretos!";
         }
     }
 
     if (!isset($_SESSION['logged_in'])) {
-        // Formulário para inserção da senha
+        // Formulário de login
         echo '
         <!DOCTYPE html>
         <html lang="pt-br">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Proteção com Senha</title>
+            <title>Login Seguro</title>
             <style>
+                @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
+                
+                * {
+                    box-sizing: border-box;
+                    margin: 0;
+                    padding: 0;
+                }
+
                 body {
                     font-family: "Poppins", sans-serif;
-                    margin: 0;
                     height: 100vh;
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    overflow: hidden;
-                    background: #000;
+                    background: linear-gradient(135deg, #1e1e1e, #3a3a3a);
                     color: #fff;
-                }
-
-                /* Fundo com animação surreal em preto e branco */
-                body::before {
-                    content: "";
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: radial-gradient(circle, #ffffff 1%, transparent 1%) center/150px 150px,
-                                radial-gradient(circle, #ffffff 1%, transparent 1%) center/300px 300px;
-                    background-blend-mode: difference;
-                    animation: bg-animation 8s infinite linear alternate;
-                    z-index: -1;
-                }
-
-                @keyframes bg-animation {
-                    0% { transform: scale(1); }
-                    50% { transform: scale(1.2) rotate(15deg); }
-                    100% { transform: scale(1); }
                 }
 
                 .login-container {
-                    position: relative;
                     background: rgba(255, 255, 255, 0.1);
                     padding: 40px;
                     border-radius: 15px;
-                    box-shadow: 0px 10px 20px rgba(255, 255, 255, 0.2);
-                    width: 100%;
-                    max-width: 400px;
+                    box-shadow: 0px 10px 30px rgba(255, 255, 255, 0.15);
                     text-align: center;
                     backdrop-filter: blur(10px);
-                    transition: transform 0.3s ease-in-out;
+                    width: 100%;
+                    max-width: 400px;
+                    animation: fadeIn 0.5s ease-in-out;
                 }
 
-                .login-container:hover {
-                    transform: translateY(-10px);
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-20px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
 
                 h2 {
-                    color: #fff;
+                    font-size: 1.8rem;
                     margin-bottom: 20px;
-                    font-weight: bold;
+                    font-weight: 600;
                 }
 
-                input[type="password"] {
-                    width: calc(100% - 20px);
-                    padding: 15px 10px;
-                    margin-bottom: 20px;
+                input {
+                    width: 100%;
+                    padding: 12px;
+                    margin: 10px 0;
                     border-radius: 8px;
-                    border: 1px solid #fff;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
                     font-size: 1rem;
                     background: rgba(255, 255, 255, 0.1);
                     color: #fff;
-                    box-shadow: inset 0px 2px 5px rgba(0, 0, 0, 0.3);
-                    transition: all 0.3s ease;
+                    transition: 0.3s ease;
                 }
 
-                input[type="password"]:focus {
-                    box-shadow: 0px 0px 8px 2px rgba(255, 255, 255, 0.5);
-                    outline: none;
+                input:focus {
                     border-color: #fff;
+                    outline: none;
                     background: rgba(255, 255, 255, 0.2);
                 }
 
                 button {
-                    background-color: #fff;
-                    color: #000;
-                    padding: 15px 20px;
-                    border: none;
-                    border-radius: 50px;
-                    cursor: pointer;
                     width: 100%;
+                    padding: 12px;
+                    border-radius: 50px;
+                    border: none;
+                    cursor: pointer;
                     font-size: 1rem;
-                    transition: background-color 0.3s ease, transform 0.2s ease;
-                    box-shadow: 0px 8px 15px rgba(255, 255, 255, 0.2);
+                    font-weight: bold;
+                    background: #fff;
+                    color: #000;
+                    transition: all 0.3s ease;
                 }
 
                 button:hover {
-                    background-color: #ccc;
+                    background: #ccc;
                     transform: translateY(-3px);
                     box-shadow: 0px 12px 20px rgba(255, 255, 255, 0.3);
                 }
 
                 .error {
-                    color: #e60000;
-                    margin-bottom: 15px;
-                    font-weight: bold;
-                    background-color: rgba(255, 0, 0, 0.1);
+                    background: rgba(255, 0, 0, 0.2);
+                    color: #ff4d4d;
                     padding: 10px;
+                    margin-bottom: 15px;
                     border-radius: 8px;
-                }
-
-                @media (max-width: 480px) {
-                    .login-container {
-                        padding: 20px;
-                    }
-
-                    h2 {
-                        font-size: 1.5rem;
-                    }
-
-                    input[type="password"], button {
-                        padding: 10px;
-                    }
+                    font-weight: bold;
                 }
             </style>
         </head>
         <body>
             <div class="login-container">
-                <h2>Proteção com Senha</h2>
+                <h2>Área Restrita</h2>
                 '. (isset($erro) ? "<div class='error'>$erro</div>" : "") .'
                 <form method="post">
-                    <input type="password" name="senha" placeholder="Digite sua senha" required>
+                    <input type="text" name="usuario" placeholder="Nome de Usuário" required>
+                    <input type="password" name="senha" placeholder="Senha" required>
                     <button type="submit">Entrar</button>
                 </form>
             </div>
