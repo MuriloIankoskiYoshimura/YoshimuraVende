@@ -2,8 +2,8 @@
 session_start();
 
 // Definição de usuário e senha corretos
-$usuario_correto = "admin";
-$senha_correta = "welson123";
+$usuario_correto = "welson";
+$senha_correta = "37793217";
 
 if (!isset($_SESSION['logged_in'])) {
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -307,7 +307,8 @@ h1 {
             <a href="#mensagens-contato">Mensagens de Contato</a>
             <a href="#lista-imoveis">Lista de Imóveis</a>
             <a href="#interessados-imoveis">Interessados em Adicionar Imóveis</a>
-             <a href="cadastro.php" class="botao-personalizado">Página de cadastro</a>
+             <a href="cadastro.php" class="botao-personalizado">Cadastrar Imóveis</a>
+             <a href="cadastro.php" class="botao-personalizado">Editar Imóveis</a>
         </nav>
         
 
