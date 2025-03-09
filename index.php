@@ -713,7 +713,7 @@
                 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
                 // Definir IDs das casas favoritas
-                $favoriteIds = [12, 17, 18]; // Altere aqui os IDs das casas favoritas
+                $favoriteIds = [14, 17, 18]; // Altere aqui os IDs das casas favoritas
 
                 // Query para selecionar as casas favoritas
                 $placeholders = implode(',', array_fill(0, count($favoriteIds), '?'));
