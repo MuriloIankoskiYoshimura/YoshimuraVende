@@ -1,10 +1,13 @@
 <?php
 session_start();
 
-// Definição de usuário e senha corretos
+// ===================
+// 1. Autenticação
+// ===================
 $usuario_correto = "welson";
 $senha_correta = "37793217";
 
+// Verifica se o usuário NÃO está logado e trata o login
 if (!isset($_SESSION['logged_in'])) {
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $usuario = trim($_POST['usuario']);
@@ -12,15 +15,15 @@ if (!isset($_SESSION['logged_in'])) {
 
         if ($usuario === $usuario_correto && $senha === $senha_correta) {
             $_SESSION['logged_in'] = true;
-            header("Location: index.php"); // Redireciona após o login bem-sucedido
+            header("Location: dashboard.php"); // Redireciona após login bem-sucedido
             exit();
         } else {
             $erro = "Usuário ou senha incorretos!";
         }
     }
 
+    // Exibe o formulário de login caso não esteja logado
     if (!isset($_SESSION['logged_in'])) {
-        // Formulário de login
         echo '
         <!DOCTYPE html>
         <html lang="pt-br">
@@ -120,7 +123,7 @@ if (!isset($_SESSION['logged_in'])) {
         <body>
             <div class="login-container">
                 <h2>Área Restrita</h2>
-                '. (isset($erro) ? "<div class='error'>$erro</div>" : "") .'
+                '. (isset($erro) ? "<div class=\'error\'>$erro</div>" : "") .'
                 <form method="post">
                     <input type="text" name="usuario" placeholder="Nome de Usuário" required>
                     <input type="password" name="senha" placeholder="Senha" required>
@@ -133,170 +136,257 @@ if (!isset($_SESSION['logged_in'])) {
     }
 }
 
-
-
-// Conexão com o banco de dados
-$host = 'localhost';
+// ======================
+// 2. Conexão ao banco
+// ======================
+$servername = 'localhost';
 $dbname = 'u268764721_IW';
 $username = 'u268764721_IW';
 $password = 'Murilo_132';
 
 $conn = new mysqli($servername, $username, $password, $dbname);
-
-// Verifica a conexão
 if ($conn->connect_error) {
     die("Conexão falhou: " . $conn->connect_error);
 }
 
-// Consultas para o banco de dados
-$sqlImoveis = "SELECT id, titulo, cidade, bairro, rua, tipo, quartos, banheiros, metros_quadrados, garagem, preco, capa, data_cadastro FROM imoveis";
+// ================================
+// 3. Deleção de imóvel (GET)
+// ================================
+if (isset($_GET['delete_id'])) {
+    $delete_id = intval($_GET['delete_id']); 
+    $sqlDelete = "DELETE FROM imoveis WHERE id = $delete_id";
+    $conn->query($sqlDelete);
+    header("Location: dashboard.php");
+    exit();
+}
+
+// ======================
+// 4. Consultas no banco
+// ======================
+$sqlImoveis = "SELECT id, titulo, cidade, bairro, rua, tipo, quartos, banheiros, 
+                      metros_quadrados, garagem, preco, capa, data_cadastro 
+               FROM imoveis";
 $resultImoveis = $conn->query($sqlImoveis);
 
-$sqlMensagens = "SELECT id, nome, email, mensagem, data_envio FROM mensagens_contato ORDER BY data_envio DESC";
+$sqlMensagens = "SELECT id, nome, email, mensagem, data_envio 
+                 FROM mensagens_contato 
+                 ORDER BY data_envio DESC";
 $resultMensagens = $conn->query($sqlMensagens);
 
-$sqlInteressados = "SELECT id, nome, email, telefone, descricao, data_envio FROM interessados_imovel ORDER BY data_envio DESC";
+$sqlInteressados = "SELECT id, nome, email, telefone, descricao, data_envio 
+                    FROM interessados_imovel 
+                    ORDER BY data_envio DESC";
 $resultInteressados = $conn->query($sqlInteressados);
-?>
 
+// ==============================
+// 5. Consulta de Page Views
+// ==============================
+$sqlPageViews = "
+    SELECT 
+        date_accessed, 
+        COUNT(*) AS total_views, 
+        COUNT(DISTINCT ip) AS unique_views
+    FROM pageviews
+    GROUP BY date_accessed
+    ORDER BY date_accessed DESC
+";
+$resultPageViews = $conn->query($sqlPageViews);
+
+$pageViewDates   = [];
+$pageViewTotals  = [];
+$pageViewUniques = [];
+
+if ($resultPageViews->num_rows > 0) {
+    while ($row = $resultPageViews->fetch_assoc()) {
+        $pageViewDates[]   = $row['date_accessed'];
+        $pageViewTotals[]  = $row['total_views'];
+        $pageViewUniques[] = $row['unique_views'];
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <?php
-      include 'header.php';
-    ?>
+    <!-- Se não tiver 'header.php', remova a linha abaixo -->
+    <?php include 'header.php'; ?> 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard da Imobiliária</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js CDN -->
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Poppins", sans-serif;
+            background: linear-gradient(135deg, #141e30, #243b55);
+            color: #fff;
+            min-height: 100vh;
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #fff;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        nav {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
         }
 
-        .container {
-    width: 90%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
+        /* Botões do menu com gradiente chamativo */
+        nav a {
+            position: relative;
+            display: inline-block;
+            margin: 0 15px;
+            padding: 10px 20px;
+            font-weight: bold;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            background: linear-gradient(90deg, #ED213A 0%, #93291E 50%, #f12711 100%);
+            box-shadow: 0 4px 10px rgba(237, 33, 58, 0.4);
+            transition: all 0.4s ease-in-out;
+            overflow: hidden;
+        }
+        nav a::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.3);
+            transform: skewX(-20deg);
+            transition: 0.5s;
+        }
+        nav a:hover::before {
+            left: 100%;
+        }
+        nav a:hover {
+            transform: scale(1.08) translateY(-3px) rotate(1deg);
+            box-shadow: 0 8px 20px rgba(237, 33, 58, 0.6);
+        }
 
-nav {
-    background-color: #333; /* Preto */
-    padding: 15px;
-    text-align: center;
-    margin-bottom: 30px;
-    border-radius: 8px; /* Bordas arredondadas para dar um aspecto moderno */
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave para destacar o menu */
-}
-
-nav a {
-    color: #fff; /* Cor branca para o texto */
-    text-decoration: none;
-    margin: 0 15px;
-    font-weight: bold;
-    transition: all 0.3s ease-in-out; /* Transição suave ao passar o mouse */
-    padding: 10px 20px; /* Adiciona um pouco de espaço ao redor do texto */
-    background-color: #444; /* Cinza escuro para os botões */
-    border-radius: 50px; /* Bordas arredondadas que criam um efeito de botão circular */
-    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2); /* Sombra para destacar os botões */
-}
-
-nav a:hover {
-    background-color: #222; /* Altera para um cinza ainda mais escuro quando o mouse está sobre o link */
-    color: #ccc; /* Muda a cor do texto para cinza claro ao passar o mouse */
-    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3); /* Aumenta a sombra ao passar o mouse */
-    transform: translateY(-3px); /* Levanta o botão um pouco ao passar o mouse */
-}
-
-h1 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #000; /* Preto */
-}
-
-.section {
-    background: #fff; /* Branco */
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 30px;
-}
-
-.section h2 {
-    margin-bottom: 15px;
-    color: #000; /* Preto */
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-}
-
-.table th, .table td {
-    border: 1px solid #ddd; /* Bordas em cinza claro */
-    padding: 10px;
-    text-align: left;
-    color: #000; /* Preto */
-}
-
-.table th {
-    background-color: #e0e0e0; /* Cinza muito claro para diferenciar os cabeçalhos */
-}
-
-.recent-message {
-    background-color: #f4f4f4; /* Cinza claro para destacar mensagens recentes */
-}
-
-.property-img {
-    max-width: 100px;
-    height: auto;
-    filter: grayscale(100%); /* Aplica um filtro para garantir que as imagens fiquem em preto e branco */
-}
-
-
-        /* Responsividade */
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            margin-bottom: 15px;
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden; 
+            margin-bottom: 20px;
+        }
+        .table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .table thead {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .table th, .table td {
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: left;
+            color: #fff;
+        }
+        .table th {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .recent-message {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .property-img {
+            max-width: 100px;
+            height: auto;
+            filter: grayscale(80%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+        }
+        .btn-deletar {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            background-color: #ff4f4f;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.3s ease;
+        }
+        .btn-deletar:hover {
+            background-color: #ff1f1f;
+            box-shadow: 0px 0px 10px rgba(255, 0, 0, 0.5);
+            transform: translateY(-3px);
+        }
         @media (max-width: 768px) {
-            .container {
-                padding: 10px;
+            nav a {
+                margin: 5px 10px;
             }
-
-            nav {
-                padding: 10px;
+            .section h2 {
+                font-size: 1.3rem;
             }
-
+            .table th, .table td {
+                font-size: 0.9rem;
+                padding: 8px;
+            }
+        }
+        @media (max-width: 480px) {
             nav a {
                 display: block;
-                margin: 10px 0;
-                padding: 10px;
+                margin: 8px 0;
             }
-
-            .table th, .table td {
-                padding: 5px;
-            }
-
-            .property-img {
-                max-width: 80px;
-            }
-        }
-
-        @media (max-width: 480px) {
             h1 {
-                font-size: 1.5rem;
+                font-size: 1.6rem;
             }
-
             .section {
-                padding: 10px;
-            }
-
-            nav {
-                text-align: left;
+                padding: 15px;
             }
         }
     </style>
+
+    <script>
+    // Função para confirmar deleção
+    function confirmarDelecao(idImovel) {
+        let confirma = confirm("Deseja realmente deletar o imóvel de ID " + idImovel + "?");
+        if (confirma) {
+            window.location.href = "?delete_id=" + idImovel;
+        }
+    }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -307,132 +397,239 @@ h1 {
             <a href="#mensagens-contato">Mensagens de Contato</a>
             <a href="#lista-imoveis">Lista de Imóveis</a>
             <a href="#interessados-imoveis">Interessados em Adicionar Imóveis</a>
-             <a href="cadastro.php" class="botao-personalizado">Cadastrar Imóveis</a>
-             <a href="cadastro.php" class="botao-personalizado">Editar Imóveis</a>
+            <a href="cadastro.php">Cadastrar Imóveis</a>
+            <a href="lista-imoveis.php">Editar Imóveis</a>
         </nav>
-        
 
         <!-- Seção de Mensagens de Contato Recentes -->
         <div id="mensagens-contato" class="section">
             <h2>Mensagens de Contato Recentes</h2>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>Email</th>
-                        <th>Mensagem</th>
-                        <th>Data de Envio</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    if ($resultMensagens->num_rows > 0) {
-                        while ($mensagem = $resultMensagens->fetch_assoc()) {
-                            echo "<tr class='recent-message'>
-                                <td>{$mensagem['id']}</td>
-                                <td>{$mensagem['nome']}</td>
-                                <td>{$mensagem['email']}</td>
-                                <td>{$mensagem['mensagem']}</td>
-                                <td>{$mensagem['data_envio']}</td>
-                            </tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='5'>Nenhuma mensagem encontrada.</td></tr>";
-                    }
-                    ?>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Mensagem</th>
+                            <th>Data de Envio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ($resultMensagens->num_rows > 0) : ?>
+                        <?php while ($mensagem = $resultMensagens->fetch_assoc()) : ?>
+                            <tr class="recent-message">
+                                <td><?php echo $mensagem['id']; ?></td>
+                                <td><?php echo $mensagem['nome']; ?></td>
+                                <td><?php echo $mensagem['email']; ?></td>
+                                <td><?php echo $mensagem['mensagem']; ?></td>
+                                <td><?php echo $mensagem['data_envio']; ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else : ?>
+                        <tr><td colspan="5">Nenhuma mensagem encontrada.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Seção de Imóveis -->
         <div id="lista-imoveis" class="section">
             <h2>Lista de Imóveis</h2>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Título</th>
-                        <th>Cidade</th>
-                        <th>Bairro</th>
-                        <th>Rua</th>
-                        <th>Tipo</th>
-                        <th>Quartos</th>
-                        <th>Banheiros</th>
-                        <th>Área (m²)</th>
-                        <th>Garagem</th>
-                        <th>Preço (R$)</th>
-                        <th>Imagem</th>
-                        <th>Data de Cadastro</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    if ($resultImoveis->num_rows > 0) {
-                        while ($imovel = $resultImoveis->fetch_assoc()) {
-                            echo "<tr>
-                                <td>{$imovel['id']}</td>
-                                <td>{$imovel['titulo']}</td>
-                                <td>{$imovel['cidade']}</td>
-                                <td>{$imovel['bairro']}</td>
-                                <td>{$imovel['rua']}</td>
-                                <td>{$imovel['tipo']}</td>
-                                <td>{$imovel['quartos']}</td>
-                                <td>{$imovel['banheiros']}</td>
-                                <td>{$imovel['metros_quadrados']}</td>
-                                <td>{$imovel['garagem']}</td>
-                                <td>R$ {$imovel['preco']}</td>
-                                <td><img src='{$imovel['capa']}' alt='Imagem do imóvel' class='property-img'></td>
-                                <td>{$imovel['data_cadastro']}</td>
-                            </tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='13'>Nenhum imóvel encontrado.</td></tr>";
-                    }
-                    ?>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Título</th>
+                            <th>Cidade</th>
+                            <th>Bairro</th>
+                            <th>Rua</th>
+                            <th>Tipo</th>
+                            <th>Quartos</th>
+                            <th>Banheiros</th>
+                            <th>Área (m²)</th>
+                            <th>Garagem</th>
+                            <th>Preço (R$)</th>
+                            <th>Imagem</th>
+                            <th>Data de Cadastro</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ($resultImoveis->num_rows > 0) : ?>
+                        <?php while ($imovel = $resultImoveis->fetch_assoc()) : ?>
+                            <tr>
+                                <td><?php echo $imovel['id']; ?></td>
+                                <td><?php echo $imovel['titulo']; ?></td>
+                                <td><?php echo $imovel['cidade']; ?></td>
+                                <td><?php echo $imovel['bairro']; ?></td>
+                                <td><?php echo $imovel['rua']; ?></td>
+                                <td><?php echo $imovel['tipo']; ?></td>
+                                <td><?php echo $imovel['quartos']; ?></td>
+                                <td><?php echo $imovel['banheiros']; ?></td>
+                                <td><?php echo $imovel['metros_quadrados']; ?></td>
+                                <td><?php echo $imovel['garagem']; ?></td>
+                                <td>R$ <?php echo $imovel['preco']; ?></td>
+                                <td><img src="<?php echo $imovel['capa']; ?>" alt="Imagem do imóvel" class="property-img"></td>
+                                <td><?php echo $imovel['data_cadastro']; ?></td>
+                                <td>
+                                    <button class="btn-deletar" 
+                                            onclick="confirmarDelecao(<?php echo $imovel['id']; ?>)">
+                                        Deletar
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else : ?>
+                        <tr><td colspan="14">Nenhum imóvel encontrado.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Seção de Interessados em Adicionar Imóveis -->
         <div id="interessados-imoveis" class="section">
             <h2>Pessoas Interessadas em Adicionar Imóveis</h2>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>Email</th>
-                        <th>Telefone</th>
-                        <th>Descrição</th>
-                        <th>Data de Envio</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    if ($resultInteressados->num_rows > 0) {
-                        while ($interessado = $resultInteressados->fetch_assoc()) {
-                            echo "<tr>
-                                <td>{$interessado['id']}</td>
-                                <td>{$interessado['nome']}</td>
-                                <td>{$interessado['email']}</td>
-                                <td>{$interessado['telefone']}</td>
-                                <td>{$interessado['descricao']}</td>
-                                <td>{$interessado['data_envio']}</td>
-                            </tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='6'>Nenhum interessado encontrado.</td></tr>";
-                    }
-                    ?>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Telefone</th>
+                            <th>Descrição</th>
+                            <th>Data de Envio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ($resultInteressados->num_rows > 0) : ?>
+                        <?php while ($interessado = $resultInteressados->fetch_assoc()) : ?>
+                            <tr>
+                                <td><?php echo $interessado['id']; ?></td>
+                                <td><?php echo $interessado['nome']; ?></td>
+                                <td><?php echo $interessado['email']; ?></td>
+                                <td><?php echo $interessado['telefone']; ?></td>
+                                <td><?php echo $interessado['descricao']; ?></td>
+                                <td><?php echo $interessado['data_envio']; ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else : ?>
+                        <tr><td colspan="6">Nenhum interessado encontrado.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- Seção de Análise de Page Views (TABELA) -->
+        <div id="analise-pageviews" class="section">
+            <h2>Análise de Page Views</h2>
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Page Views Totais</th>
+                            <th>Page Views Únicas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (!empty($pageViewDates)) : ?>
+                        <?php for($i = 0; $i < count($pageViewDates); $i++): ?>
+                            <tr>
+                                <td><?php echo $pageViewDates[$i]; ?></td>
+                                <td><?php echo $pageViewTotals[$i]; ?></td>
+                                <td><?php echo $pageViewUniques[$i]; ?></td>
+                            </tr>
+                        <?php endfor; ?>
+                    <?php else : ?>
+                        <tr><td colspan="3">Nenhuma visita registrada ainda.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Seção de Gráfico de Page Views -->
+        <div id="grafico-pageviews" class="section">
+            <h2>Gráfico de Page Views</h2>
+            <canvas id="myChart" width="400" height="150"></canvas>
+        </div>
+
     </div>
+
+    <?php
+    // Fecha a conexão com o banco
+    $conn->close();
+    ?>
+
+    <!-- Script para criar o gráfico com Chart.js (melhorado) -->
+    <script>
+        // Arrays em JavaScript vindos do PHP
+        let pageViewDates   = <?php echo json_encode($pageViewDates); ?>;
+        let pageViewTotals  = <?php echo json_encode($pageViewTotals); ?>;
+        let pageViewUniques = <?php echo json_encode($pageViewUniques); ?>;
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'line', // Gráfico de linha
+            data: {
+                labels: pageViewDates, // Datas
+                datasets: [
+                    {
+                        label: 'Visitas Totais',
+                        data: pageViewTotals,
+                        tension: 0.3,   // Curva suave
+                        fill: true,     // Preenche a área sob a linha
+                    },
+                    {
+                        label: 'Visitas Únicas',
+                        data: pageViewUniques,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Histórico de Page Views (Totais e Únicos)'
+                    },
+                    tooltip: {
+                        enabled: true,
+                        mode: 'index'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    },
+                    x: {
+                        // Exibe os labels (datas) de forma legível 
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 50,
+                            minRotation: 0
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
-
-<?php
-// Fecha a conexão com o banco de dados
-$conn->close();
-?>

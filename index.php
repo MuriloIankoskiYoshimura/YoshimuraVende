@@ -713,7 +713,7 @@
                 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
                 // Definir IDs das casas favoritas
-                $favoriteIds = [12, 13, 14]; // Altere aqui os IDs das casas favoritas
+                $favoriteIds = [12, 17, 18]; // Altere aqui os IDs das casas favoritas
 
                 // Query para selecionar as casas favoritas
                 $placeholders = implode(',', array_fill(0, count($favoriteIds), '?'));
@@ -855,6 +855,31 @@
     <div class="dots-separator">
         <span></span>
     </div>
+    <?php
+// Exemplo simples de registro de IP
+$ip = $_SERVER['REMOTE_ADDR'];
+
+// Se estiver atrás de Cloudflare ou outro proxy, você pode usar:
+ // $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'];
+
+$date = date('Y-m-d');
+
+// Conexão ao BD (ajuste se necessário)
+$servername = 'localhost';
+$username   = 'root';
+$password   = '';
+$dbname     = 'minha_base';
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+if (!$conn->connect_error) {
+    // Insere a cada page view
+    $sqlInsert = "INSERT INTO pageviews (ip, date_accessed) VALUES ('$ip', '$date')";
+    $conn->query($sqlInsert);
+}
+
+// ... o restante do seu header ...
+?>
+
     <?php
         include 'foooter.php';
     ?>

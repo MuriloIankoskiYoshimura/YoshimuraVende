@@ -170,5 +170,33 @@
       }
     });
   </script>
+  <?php
+// INÍCIO DO header.php EXEMPLO:
+
+session_start();
+
+// Conexão ao banco de dados (ajuste conforme seu ambiente)
+$servername = 'localhost';
+$username = 'u268764721_IW';
+$password = 'Murilo_132';
+$dbname   = 'u268764721_IW';
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+if ($conn->connect_error) {
+    die("Falha na conexão: " . $conn->connect_error);
+}
+
+// Registra Page View:
+$ip = $_SERVER['REMOTE_ADDR']; // IP do visitante
+$page = basename($_SERVER['PHP_SELF']); // ou defina manualmente a página
+$date = date('Y-m-d');
+
+$sqlInsert = "INSERT INTO pageviews (ip, page, date_accessed)
+              VALUES ('$ip', '$page', '$date')";
+$conn->query($sqlInsert);
+
+// FIM DO header.php (continue seu código normal)
+?>
+
 </body>
 </html>

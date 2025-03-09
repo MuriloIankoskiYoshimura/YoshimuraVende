@@ -2,9 +2,9 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Casas</title>
     <style>
+        /* ===== RESET BÁSICO ===== */
         * {
             margin: 0;
             padding: 0;
@@ -94,8 +94,9 @@
         .form-footer button:hover {
             background: #0056b3;
         }
-          /* Estilo para a visualização de imagens */
-          .image-preview {
+
+        /* Estilo para a visualização de imagens */
+        .image-preview {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
@@ -107,71 +108,142 @@
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
+
+        /* Drag & Drop Múltiplo */
+        .drop-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .drop-area.dragover {
+            background-color: #f0f0f0;
+            border-color: #000;
+        }
+
+        .image-container {
+            position: relative;
+            margin: 5px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+            display: inline-block;
+        }
+
+        .image-container:hover {
+            background-color: #f0f0f0;
+        }
+
+        .image-container span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #000;
+            color: #fff;
+            padding: 2px 5px;
+            font-size: 10px;
+            border-radius: 3px;
+        }
     </style>
+
+    <script>
+        // Função de formatação de preço (opcional)
+        function formatPrice(element) {
+            // Exemplo simples: remove tudo que não for número e vírgula
+            // Ajuste conforme necessidade
+        }
+    </script>
 </head>
 <body>
     <div class="form-container">
         <h1>Cadastro de Casas</h1>
+
+        <!-- IMPORTANTE: "action" aponta para o script que processa os dados -->
         <form action="processarcasas.php" method="POST" enctype="multipart/form-data">
+
             <!-- Título da Casa -->
             <div class="form-group">
-                <label for="title">Título da Casa (para voc~e encontrar e para mensagem whatsapp)</label>
-                <input type="text" id="title" name="title" placeholder="Ex: Casa no Centro com 3 Quartos" required>
+                <label for="title">
+                    Título da Casa 
+                    (<span style="color:red">Obrigatório</span>)
+                </label>
+                <input 
+                    type="text" 
+                    id="title" 
+                    name="title" 
+                    placeholder="Ex: Casa no Centro com 3 Quartos" 
+                    required
+                >
             </div>
 
             <div class="form-group">
-                <label for="title">Título do site(SEO)</label>
-                <input type="text" id="seo" name="seo" placeholder="Ex: Apartamento com 56m² no bairro Centro em Garopaba para Comprar" required>
+                <label for="seo">
+                    Título do Site (SEO) 
+                    (<span style="color:red">Obrigatório</span>)
+                </label>
+                <input 
+                    type="text" 
+                    id="seo" 
+                    name="seo" 
+                    placeholder="Ex: Apartamento com 56m²..." 
+                    required
+                >
             </div>
 
-            <select id="cidade" name="cidade" required>
-        <option value="">Selecione a Cidade</option>
-        <option value="Garopaba">Garopaba</option>
-        <option value="Garopaba">Paulo Lopes</option>
-        <option value="Outra">Outra</option>
-    </select>
-
-
-            <!-- Localização -->
+            <!-- Cidade -->
             <div class="form-group">
-    <label for="bairro">Bairro</label>
-    <select id="bairro" name="bairro" required>
-        <option value="">Selecione o Bairro</option>
-        <option value="Centro">Centro</option>
-        <option value="Panorâmico">Panorâmico</option>
-        <option value="Morrinhos">Morrinhos</option>
-        <option value="Ferraz">Ferraz</option>
-        <option value="Ambrósio">Ambrósio</option>
-        <option value="Pinguirito">Pinguirito</option>
-        <option value="Areias de Palhocinha">Areias de Palhocinha</option>
-        <option value="Campo D’una">Campo D’una</option>
-        <option value="Encantada">Encantada</option>
-        <option value="Barrinha">Barrinha</option>
-        <option value="Vigia">Praia da Vigia</option>
-        <option value="Gamboa">Gamboa</option>
-        <option value="Praia da Ferrugem">Praia da Ferrugem</option>
-        <option value="Praia do Silveira">Praia do Silveira</option>
-        <option value="Praia do Rosa">Praia do Rosa</option>
-        <option value="Ouvidor">Praia do Ouvidor</option>
-        <option value="Praia da Barra">Praia da Barra</option>
-        <option value="Macacu">Macacu</option>
-        <option value="Limpa">Limpa</option>
-        <option value="Garopaba Sul">Garopaba Sul</option>
-        <option value="Siriú">Siriú</option>
-        <option value="Cova Triste">Cova Triste</option>
-    </select>
-
-
-
-            <div class="form-group">
-                <label for="rua">Endereço</label>
-                <input type="text" id="rua" name="rua" placeholder=" nome da rua e numero! " required>
+                <label for="cidade">
+                    Cidade 
+                    (<span style="color:red">Obrigatório</span>)
+                </label>
+                <select id="cidade" name="cidade" required>
+                    <option value="">Selecione a Cidade</option>
+                    <option value="Garopaba">Garopaba</option>
+                    <option value="Paulo Lopes">Paulo Lopes</option>
+                    <option value="Outra">Outra</option>
+                </select>
             </div>
 
-            
+            <!-- Bairro -->
+            <div class="form-group">
+                <label for="bairro">
+                    Bairro 
+                    (<span style="color:red">Obrigatório</span>)
+                </label>
+                <select id="bairro" name="bairro" required>
+                    <option value="">Selecione o Bairro</option>
+                    <option value="Centro">Centro</option>
+                    <option value="Panorâmico">Panorâmico</option>
+                    <option value="Morrinhos">Morrinhos</option>
+                    <!-- ... e assim por diante ... -->
+                    <option value="Cova Triste">Cova Triste</option>
+                </select>
+            </div>
+
+            <!-- Endereço -->
+            <div class="form-group">
+                <label for="rua">
+                    Endereço 
+                    (<span style="color:red">Obrigatório</span>)
+                </label>
+                <input 
+                    type="text" 
+                    id="rua" 
+                    name="rua" 
+                    placeholder="Ex: Rua Principal, 100" 
+                    required
+                >
+            </div>
+
             <!-- Tipo de Imóvel -->
             <div class="form-group">
-                <label for="type">Tipo de Imóvel</label>
+                <label for="type">
+                    Tipo de Imóvel 
+                    (<span style="color:red">Obrigatório</span>)
+                </label>
                 <select id="type" name="type" required>
                     <option value="">Selecione</option>
                     <option value="Casa">Casa</option>
@@ -180,220 +252,236 @@
                 </select>
             </div>
             
-            <!-- Número de Quartos -->
+            <!-- Quartos -->
             <div class="form-group">
-                <label for="bedrooms">Número de Quartos</label>
-                <input type="number" id="bedrooms" name="bedrooms" placeholder="Ex: 3" required>
+                <label for="bedrooms">
+                    Número de Quartos 
+                    (<span style="color:red">Obrigatório</span>)
+                </label>
+                <input 
+                    type="number" 
+                    id="bedrooms" 
+                    name="bedrooms" 
+                    placeholder="Ex: 3" 
+                    required
+                >
             </div>
             
-            <!-- Número de Banheiros -->
+            <!-- Banheiros -->
             <div class="form-group">
-                <label for="bathrooms">Número de Banheiros</label>
-                <input type="number" id="bathrooms" name="bathrooms" placeholder="Ex: 2" required>
+                <label for="bathrooms">
+                    Número de Banheiros 
+                    (<span style="color:red">Obrigatório</span>)
+                </label>
+                <input 
+                    type="number" 
+                    id="bathrooms" 
+                    name="bathrooms" 
+                    placeholder="Ex: 2" 
+                    required
+                >
             </div>
 
+            <!-- Área (m2) -->
             <div class="form-group">
-                <label for="m2">m2</label>
-                <input type="number" id="m2" name="m2" placeholder="Ex: 100" required>
+                <label for="m2">
+                    m2 
+                    (<span style="color:red">Obrigatório</span>)
+                </label>
+                <input 
+                    type="number" 
+                    id="m2" 
+                    name="m2" 
+                    placeholder="Ex: 100" 
+                    required
+                >
             </div>
             
-            <!-- Vagas de Garagem -->
+            <!-- Garagem (opcional) -->
             <div class="form-group">
                 <label for="garage">Vagas de Garagem</label>
-                <input type="number" id="garage" name="garage" placeholder="Ex: 1">
+                <input 
+                    type="number" 
+                    id="garage" 
+                    name="garage" 
+                    placeholder="Ex: 1"
+                >
             </div>
             
             <!-- Preço -->
             <div class="form-group">
-    <label for="price">Preço</label>
-    <input type="text" id="price" name="price" placeholder="Ex: 500.000,00" required oninput="formatPrice(this)">
-</div>
+                <label for="price">
+                    Preço 
+                    (<span style="color:red">Obrigatório</span>)
+                </label>
+                <input 
+                    type="text" 
+                    id="price" 
+                    name="price" 
+                    placeholder="Ex: 500.000,00" 
+                    required 
+                    oninput="formatPrice(this)"
+                >
+            </div>
 
-
-            
-            <!-- Descrição -->
+            <!-- Descrição (opcional) -->
             <div class="form-group">
                 <label for="description">Descrição</label>
-                <textarea id="description" name="description" rows="5" placeholder="Descreva detalhes do imóvel..." ></textarea>
+                  (<span style="color:red">Obrigatório</span>)
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    rows="5" 
+                    placeholder="Descreva detalhes do imóvel..."
+                ></textarea>
             </div>
+
+            <!-- Imagem de Capa (opcional) -->
             <div class="form-group">
-    <label for="coverImage">Imagem de Capa</label>
-    <input type="file" id="coverImage" name="coverImage" accept="image/*" >
-    <div class="image-preview" id="coverImagePreview"></div>
-</div>
+                <label for="coverImage">Imagem de Capa</label>
+                  (<span style="color:red">Obrigatório</span>)
+                <input 
+                    type="file" 
+                    id="coverImage" 
+                    name="coverImage" 
+                    accept="image/*"
+                >
+                <div class="image-preview" id="coverImagePreview"></div>
+            </div>
 
-<script>
-    // Pré-visualização da Imagem de Capa
-    document.getElementById("coverImage").addEventListener("change", function(event) {
-        const coverImagePreview = document.getElementById("coverImagePreview");
-        coverImagePreview.innerHTML = ""; // Limpa a pré-visualização anterior
-
-        const file = event.target.files[0];
-
-        if (file && file.type.startsWith("image/")) {
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                const imgElement = document.createElement("img");
-                imgElement.src = e.target.result;
-                coverImagePreview.appendChild(imgElement);
-            };
-
-            reader.readAsDataURL(file);
-        }
-    });
-</script>
-            
-             <!-- Upload de Imagens -->
-<div class="form-group">
-    <label for="images">Imagens do Imóvel</label>
-    <div id="dropArea" class="drop-area">
-        <p>Arraste suas imagens aqui ou clique para selecionar</p>
-        <input type="file" id="images" name="images[]" accept="image/*" multiple required hidden>
-    </div>
-    <div class="image-preview" id="imagePreview"></div>
-</div>
-
-<script>
-    const dropArea = document.getElementById("dropArea");
-    const fileInput = document.getElementById("images");
-    const imagePreview = document.getElementById("imagePreview");
-    let filesArray = [];
-
-    // Eventos para drag and drop na área de upload
-    dropArea.addEventListener("dragover", (event) => {
-        event.preventDefault();
-        dropArea.classList.add("dragover");
-    });
-
-    dropArea.addEventListener("dragleave", () => {
-        dropArea.classList.remove("dragover");
-    });
-
-    dropArea.addEventListener("drop", (event) => {
-        event.preventDefault();
-        dropArea.classList.remove("dragover");
-        const files = event.dataTransfer.files;
-        addFiles(files);
-    });
-
-    // Abrir seletor de arquivos ao clicar na área
-    dropArea.addEventListener("click", () => {
-        fileInput.click();
-    });
-
-    // Evento ao selecionar arquivos via input
-    fileInput.addEventListener("change", () => {
-        const files = fileInput.files;
-        addFiles(files);
-    });
-
-    // Adicionar arquivos ao array e renderizar
-    function addFiles(files) {
-        Array.from(files).forEach(file => {
-            if (file && file.type.startsWith("image/")) {
-                filesArray.push(file);
-            }
-        });
-        renderPreview();
-    }
-
-    // Renderizar pré-visualização das imagens
-    function renderPreview() {
-        imagePreview.innerHTML = ""; // Limpar pré-visualização
-        filesArray.forEach((file, index) => {
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                const imgContainer = document.createElement("div");
-                imgContainer.classList.add("image-container");
-                imgContainer.setAttribute("data-index", index);
-
-                const imgElement = document.createElement("img");
-                imgElement.src = e.target.result;
-                imgElement.style.width = "100px";
-                imgElement.style.margin = "5px";
-
-                const label = document.createElement("span");
-                label.textContent = index === 0 ? "Imagem Principal" : "";
-
-                imgContainer.appendChild(imgElement);
-                imgContainer.appendChild(label);
-                imagePreview.appendChild(imgContainer);
-
-                // Evento de clique para mover a imagem para o topo
-                imgContainer.addEventListener("click", () => {
-                    moveToTop(index);
+            <!-- Script de pré-visualização da Capa -->
+            <script>
+                document.getElementById("coverImage").addEventListener("change", function() {
+                    const preview = document.getElementById("coverImagePreview");
+                    preview.innerHTML = ""; // Limpa anterior
+                    const file = this.files[0];
+                    if (file && file.type.startsWith("image/")) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = document.createElement("img");
+                            img.src = e.target.result;
+                            preview.appendChild(img);
+                        };
+                        reader.readAsDataURL(file);
+                    }
                 });
-            };
+            </script>
 
-            reader.readAsDataURL(file);
-        });
-    }
+            <!-- Imagens do Imóvel (Drag & Drop, obrigatório) -->
+            <div class="form-group">
+                <label for="images">
+                    Imagens do Imóvel 
+                    (<span style="color:red">Obrigatório</span>)
+                </label>
+                <div id="dropArea" class="drop-area">
+                    <p>Arraste suas imagens aqui ou clique para selecionar</p>
+                    <input 
+                        type="file" 
+                        id="images" 
+                        name="images[]" 
+                        accept="image/*" 
+                        multiple 
+                        required 
+                        hidden
+                    >
+                </div>
+                <div class="image-preview" id="imagePreview"></div>
+            </div>
 
-    // Mover imagem para o topo da lista
-    function moveToTop(index) {
-        if (index > 0) {
-            const selectedFile = filesArray.splice(index, 1)[0];
-            filesArray.unshift(selectedFile); // Adiciona no início
-            renderPreview(); // Atualiza a visualização
-        }
-    }
-</script>
+            <script>
+                const dropArea = document.getElementById("dropArea");
+                const fileInput = document.getElementById("images");
+                const imagePreview = document.getElementById("imagePreview");
+                let filesArray = [];
 
-<!-- Estilo adicional -->
-<style>
-    .drop-area {
-        border: 2px dashed #ccc;
-        border-radius: 10px;
-        padding: 20px;
-        text-align: center;
-        cursor: pointer;
-    }
+                dropArea.addEventListener("dragover", (event) => {
+                    event.preventDefault();
+                    dropArea.classList.add("dragover");
+                });
 
-    .drop-area.dragover {
-        background-color: #f0f0f0;
-        border-color: #000;
-    }
+                dropArea.addEventListener("dragleave", () => {
+                    dropArea.classList.remove("dragover");
+                });
 
-    .image-preview {
-        display: flex;
-        flex-wrap: wrap;
-    }
+                dropArea.addEventListener("drop", (event) => {
+                    event.preventDefault();
+                    dropArea.classList.remove("dragover");
+                    const files = event.dataTransfer.files;
+                    addFiles(files);
+                });
 
-    .image-container {
-        position: relative;
-        margin: 5px;
-        cursor: pointer;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        padding: 5px;
-        display: inline-block;
-    }
+                dropArea.addEventListener("click", () => {
+                    fileInput.click();
+                });
 
-    .image-container:hover {
-        background-color: #f0f0f0;
-    }
+                fileInput.addEventListener("change", () => {
+                    addFiles(fileInput.files);
+                });
 
-    .image-container span {
-        position: absolute;
-        top: 0;
-        left: 0;
-        background: #000;
-        color: #fff;
-        padding: 2px 5px;
-        font-size: 10px;
-        border-radius: 3px;
-    }
-</style>
-            
+                function addFiles(files) {
+                    for (let file of files) {
+                        if (file.type.startsWith("image/")) {
+                            filesArray.push(file);
+                        }
+                    }
+                    renderPreview();
+                }
+
+                function renderPreview() {
+                    imagePreview.innerHTML = "";
+                    filesArray.forEach((file, index) => {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const container = document.createElement("div");
+                            container.classList.add("image-container");
+                            container.setAttribute("data-index", index);
+
+                            const imgElement = document.createElement("img");
+                            imgElement.src = e.target.result;
+                            imgElement.style.width = "100px";
+                            imgElement.style.margin = "5px";
+
+                            const label = document.createElement("span");
+                            label.textContent = index === 0 ? "Imagem Principal" : "";
+
+                            container.appendChild(imgElement);
+                            container.appendChild(label);
+                            imagePreview.appendChild(container);
+
+                            // Clique para mover imagem para topo
+                            container.addEventListener("click", () => {
+                                moveToTop(index);
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+
+                function moveToTop(index) {
+                    if (index > 0) {
+                        const selected = filesArray.splice(index, 1)[0];
+                        filesArray.unshift(selected);
+                        renderPreview();
+                    }
+                }
+            </script>
+
             <!-- Contato -->
             <div class="form-group">
-                <label for="contact">Contato (E-mail ou Telefone)</label>
-                <input type="text" id="contact" name="contact" placeholder="Ex: contato@email.com ou (99) 99999-9999" required>
+                <label for="contact">
+                    Contato (E-mail ou Telefone) 
+                    (<span style="color:red">Obrigatório</span>)
+                </label>
+                <input 
+                    type="text" 
+                    id="contact" 
+                    name="contact" 
+                    placeholder="Ex: contato@email.com"
+                    required
+                >
             </div>
-            
-            <!-- Botão de Enviar -->
+
+            <!-- Botão de Enviar (importante: type="submit") -->
             <div class="form-footer">
                 <button type="submit">Cadastrar Imóvel</button>
             </div>

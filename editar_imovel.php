@@ -19,7 +19,7 @@ if (!isset($_GET['id'])) {
 
 $id = $_GET['id'];
 
-// Busca os dados do imóvel
+// Busca os dados do imóvel no banco de dados
 $stmt = $pdo->prepare("SELECT * FROM imoveis WHERE id = :id");
 $stmt->bindParam(':id', $id);
 $stmt->execute();
@@ -29,7 +29,10 @@ if (!$imovel) {
     die("Imóvel não encontrado.");
 }
 
-// Processa o formulário de edição
+// 🔹 PREÇO COMO TEXTO DIRETAMENTE DO BANCO
+$preco = $imovel['preco']; // Sem formatação, como foi salvo no banco
+
+// Atualiza os dados no banco de dados quando o formulário é enviado
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $titulo = $_POST['titulo'];
     $seo = $_POST['seo'];
@@ -41,11 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $banheiros = $_POST['banheiros'];
     $metros_quadrados = $_POST['metros_quadrados'];
     $garagem = $_POST['garagem'];
-    $preco = $_POST['preco'];
+    $preco = $_POST['preco']; // Mantendo o formato como texto
     $descricao = $_POST['descricao'];
     $contato = $_POST['contato'];
 
-    // Atualiza os dados no banco
     $update = $pdo->prepare("UPDATE imoveis SET 
         titulo = :titulo, seo = :seo, cidade = :cidade, bairro = :bairro, rua = :rua, 
         tipo = :tipo, quartos = :quartos, banheiros = :banheiros, metros_quadrados = :metros_quadrados, 
@@ -68,37 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ':id' => $id
     ]);
 
-    echo "<script>alert('Dados atualizados com sucesso!'); window.location.href='editar_imovel.php?id=$id';</script>";
-}
-
-// Processa o upload da imagem de capa
-if (isset($_FILES['capa']) && $_FILES['capa']['size'] > 0) {
-    $extensao = pathinfo($_FILES['capa']['name'], PATHINFO_EXTENSION);
-    $novoNome = "capa_$id." . $extensao;
-    $caminho = "uploads/" . $novoNome;
-
-    if (move_uploaded_file($_FILES['capa']['tmp_name'], $caminho)) {
-        $pdo->prepare("UPDATE imoveis SET capa = :capa WHERE id = :id")
-            ->execute([':capa' => $caminho, ':id' => $id]);
-
-        echo "<script>alert('Capa atualizada!'); window.location.href='editar_imovel.php?id=$id';</script>";
-    }
-}
-
-// Remover imagens individuais
-if (isset($_GET['remover_imagem'])) {
-    $imagem = $_GET['remover_imagem'];
-
-    // Deleta a imagem do diretório
-    if (file_exists($imagem)) {
-        unlink($imagem);
-    }
-
-    // Remove do banco de dados
-    $stmt = $pdo->prepare("UPDATE imoveis SET imagens = REPLACE(imagens, :imagem, '') WHERE id = :id");
-    $stmt->execute([':imagem' => $imagem, ':id' => $id]);
-
-    echo "<script>alert('Imagem removida!'); window.location.href='editar_imovel.php?id=$id';</script>";
+    // 🔹 REDIRECIONA PARA A PÁGINA DE OBRIGADO APÓS SALVAR
+    header("Location: obrigado.php");
+    exit;
 }
 
 ?>
@@ -139,28 +113,29 @@ if (isset($_GET['remover_imagem'])) {
             border-radius: 5px;
             cursor: pointer;
         }
-        button:hover {
-            background: #218838;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Editar Imóvel</h2>
-        <form method="POST" enctype="multipart/form-data">
-            <input type="text" name="titulo" value="<?= $imovel['titulo'] ?>" placeholder="Título" required>
-            <input type="text" name="seo" value="<?= $imovel['seo'] ?>" placeholder="SEO">
-            <input type="text" name="cidade" value="<?= $imovel['cidade'] ?>" placeholder="Cidade">
-            <input type="text" name="bairro" value="<?= $imovel['bairro'] ?>" placeholder="Bairro">
-            <input type="text" name="rua" value="<?= $imovel['rua'] ?>" placeholder="Rua">
-            <input type="text" name="tipo" value="<?= $imovel['tipo'] ?>" placeholder="Tipo">
-            <input type="number" name="quartos" value="<?= $imovel['quartos'] ?>" placeholder="Quartos">
-            <input type="number" name="banheiros" value="<?= $imovel['banheiros'] ?>" placeholder="Banheiros">
-            <input type="number" name="metros_quadrados" value="<?= $imovel['metros_quadrados'] ?>" placeholder="M²">
-            <input type="number" name="garagem" value="<?= $imovel['garagem'] ?>" placeholder="Garagem">
-            <input type="number" name="preco" value="<?= $imovel['preco'] ?>" placeholder="Preço">
-            <textarea name="descricao" placeholder="Descrição"><?= $imovel['descricao'] ?></textarea>
-            <input type="file" name="capa">
+        <form method="POST">
+            <input type="text" name="titulo" value="<?= $imovel['titulo'] ?>" required>
+            <input type="text" name="seo" value="<?= $imovel['seo'] ?>">
+            <input type="text" name="cidade" value="<?= $imovel['cidade'] ?>" required>
+            <input type="text" name="bairro" value="<?= $imovel['bairro'] ?>">
+            <input type="text" name="rua" value="<?= $imovel['rua'] ?>">
+            <input type="text" name="tipo" value="<?= $imovel['tipo'] ?>">
+            <input type="number" name="quartos" value="<?= $imovel['quartos'] ?>">
+            <input type="number" name="banheiros" value="<?= $imovel['banheiros'] ?>">
+            <input type="number" name="metros_quadrados" value="<?= $imovel['metros_quadrados'] ?>">
+            <input type="number" name="garagem" value="<?= $imovel['garagem'] ?>">
+
+            <!-- 🔹 PREÇO EM FORMATO TEXTO (EDITÁVEL) -->
+            <input type="text" name="preco" value="<?= $preco ?>" required>
+
+            <textarea name="descricao"><?= $imovel['descricao'] ?></textarea>
+            <input type="text" name="contato" value="<?= $imovel['contato'] ?>" required>
+
             <button type="submit">Salvar Alterações</button>
         </form>
     </div>
